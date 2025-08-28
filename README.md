@@ -18,7 +18,8 @@ A modern, self-hosted FPV (First-Person View) session browser and sharing app. B
 
 ---
 
-![demo.preview.png]("demo.preview.png")
+![demo.preview.png](./demo.preview.png)
+
 
 
 ## Features ✨
@@ -124,3 +125,4 @@ You can also find example service and Nginx configs here:
 ## License ⚖️
 
 This project is provided as-is. Add your chosen license here (e.g., MIT, Apache-2.0).
+
