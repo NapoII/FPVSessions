@@ -18,6 +18,9 @@ A modern, self-hosted FPV (First-Person View) session browser and sharing app. B
 
 ---
 
+![demo.preview.png]("demo.preview.png")
+
+
 ## Features ✨
 
 - Session overview with stats (videos, images, size, duration)
