@@ -1,0 +1,13 @@
+{
+  "admin": {
+    "password_hash": "scrypt:32768:8:1$3LqhGHDLvDcqHR4U$f20eeee4f23dd0797773066da7cb9934f71cdc46c111ca87edc8660efe3c14f74710a66a1fb13513c836063a7d1fc865d7504bdd01307800bc19f198b54755a1",
+    "login_count": 24
+  },
+  "dave": {
+    "password_hash": "scrypt:32768:8:1$kLlyPYl1qI4Ge7NG$7699c82afc9c3da6c6b7f98517d2872235afacf1b9446ba3ff1fb02a9c29b46e164d245b6f6bc539c1d4304d08ee3f27dd0bd5001ddf986c0b2a3de4d8cf58be",
+    "login_count": 6,
+    "permissions": {
+      "share": true
+    }
+  }
+}

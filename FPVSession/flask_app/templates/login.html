@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FPV Control Center - Login</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0ea5e9 100%);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      perspective: 900px; /* enable 3D depth for children */
+    }
+
+    /* Animated Background */
+
+    /* Footer */
+    .site-footer {
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      bottom: 10px;
+      z-index: 11000;
+      font-size: 0.85rem;
+      color: rgba(226,232,240,0.95);
+      pointer-events: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+    .site-footer .left, .site-footer .right { pointer-events: auto; }
+    .site-footer a { color: #a8d8ff; text-decoration: none; }
+    .site-footer a:hover { text-decoration: underline; }
+    .bg-animation {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      overflow: hidden;
+    }
+
+    /* 3D wrapper around hero drone so we can compose independent animations (sway/tilt on wrapper, float on image) */
+    .logo-3d-wrap {
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 6;
+      perspective: 900px;
+      transform-style: preserve-3d;
+      will-change: transform;
+      /* gentle horizontal sway + subtle vertical 3D tilt on the wrapper */
+      animation: logoSway 18s cubic-bezier(.22,.98,.38,.98) infinite,
+                 logo3DVert 13s ease-in-out infinite alternate;
+    }
+
+    .logo-3d-wrap.down .hero-drone { animation: none; transform: translateY(520px); }
+    .logo-3d-wrap.small.down .hero-drone { transform: translateY(320px); }
+    .logo-3d-wrap.lift-off .hero-drone { animation: none; transform: translateY(-660px) scale(0.9); opacity: 0.6; }
+    .logo-3d-wrap.small.lift-off .hero-drone { transform: translateY(-420px) scale(0.9); opacity: 0.6; }
+
+    /* Single hero drone (now positioned by the wrapper) */
+    .hero-drone {
+      position: relative;
+      width: 460px;
+      height: 460px;
+      /* keep background centered but limit its drawn size so it never overflows visually */
+      background-image: url("{{ url_for('static', filename='login/drone.png') }}");
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: contain;
+      max-width: 460px;
+      max-height: 460px;
+      opacity: 0.85;
+      transition: transform 600ms ease, filter 300ms ease, opacity 400ms ease;
+      animation: heroFloat 6s ease-in-out infinite;
+      cursor: pointer;
+      filter: drop-shadow(0 15px 30px rgba(14,165,233,.5));
+      transform-style: preserve-3d;
+      will-change: transform, filter, opacity;
+    }
+
+    /* Slightly smaller variant for drone_2 (drone1) - made smaller per request */
+    .hero-drone.small {
+      width: 300px;
+      height: 300px;
+    }
+
+    .hero-drone:hover {
+      /* stronger tilt + scale on hover (image-level) */
+      transform: rotateX(20deg) rotateY(-20deg) scale(1.4);
+      filter: drop-shadow(0 30px 60px rgba(14,165,233,.85));
+      opacity: 1;
+    }
+
+    /* On click: go down to make space */
+  /* the wrapper handles down / lift-off transforms (see .logo-3d-wrap rules above) */
+
+    @keyframes heroFloat {
+      0%, 100% { transform: translateY(0px); }
+      /* larger float amplitude for a bouncier effect */
+      50% { transform: translateY(-24px); }
+    }
+
+    /* subtle horizontal sway on wrapper */
+    @keyframes logoSway {
+      0% { transform: translate(-50%, -50%) rotateZ(-0.6deg) translateX(-6px); }
+      25% { transform: translate(-50%, -50%) rotateZ(0.2deg) translateX(6px); }
+      50% { transform: translate(-50%, -50%) rotateZ(0.6deg) translateX(10px); }
+      75% { transform: translate(-50%, -50%) rotateZ(0.2deg) translateX(6px); }
+      100% { transform: translate(-50%, -50%) rotateZ(-0.6deg) translateX(-6px); }
+    }
+
+    /* slow vertical 3D tilt to give depth */
+    @keyframes logo3DVert {
+      0% { transform: translate(-50%, -50%) rotateX(6deg); }
+      50% { transform: translate(-50%, -50%) rotateX(-6deg); }
+      100% { transform: translate(-50%, -50%) rotateX(6deg); }
+    }
+
+    /* Slightly stronger hover for the smaller variant so motion reads well */
+    .hero-drone.small:hover {
+      transform: translate(-50%, -50%) rotateX(16deg) rotateY(-16deg) scale(1.25);
+      filter: drop-shadow(0 22px 44px rgba(14,165,233,.8));
+      opacity: 1;
+    }
+
+    /* Particle effects */
+    .particles {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: rgba(14, 165, 233, 0.4);
+      animation: particle-float 8s linear infinite;
+    }
+
+    @keyframes particle-float {
+      /* particles move upward relative to their start position */
+      0% { transform: translateY(0) translateX(0); opacity: 1; }
+      70% { opacity: 1; }
+      100% { transform: translateY(-120vh) translateX(40px); opacity: 0; }
+    }
+
+    /* Login Form */
+    .login-container {
+      /* fix at bottom center */
+      position: fixed;
+      left: 50%;
+      bottom: 58px;
+      transform: translateX(-50%) translateY(24px);
+      z-index: 10;
+      /* slightly more subtle / transparent */
+      background: rgba(15, 23, 42, 0.28);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 20px;
+      padding: 3rem 2.5rem;
+      width: 100%;
+      max-width: 420px;
+      color: #f1f5f9;
+      box-shadow:
+        0 25px 50px rgba(0, 0, 0, 0.3),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 400ms ease, transform 400ms ease;
+    }
+
+    .login-container.open {
+      /* center vertically when opened */
+      opacity: 1;
+      top: 50%;
+      bottom: auto;
+      transform: translateX(-50%) translateY(-50%);
+      pointer-events: auto;
+    }
+
+    .login-title {
+      text-align: center;
+      margin-bottom: 2rem;
+      color: #ffffff;
+      font-weight: 600;
+      font-size: 1.8rem;
+      text-shadow: 0 2px 10px rgba(14, 165, 233, 0.3);
+    }
+
+    /* Logo styling with glow effect */
+  .login-logo {
+      display: block;
+      margin: 0 auto 2rem auto;
+      width: 120px;
+      height: auto;
+  /* slightly desaturated and subtle */
+  filter: grayscale(100%) brightness(0.9) drop-shadow(0 0 8px rgba(0,0,0,0.15));
+  opacity: 0.78;
+      transition: all 0.4s ease;
+      animation: logoFloat 4s ease-in-out infinite;
+    }
+
+    .login-logo:hover {
+      transform: scale(1.1);
+      filter: drop-shadow(0 0 30px rgba(14, 165, 233, 0.8));
+    }
+
+    @keyframes logoFloat {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .drone-icon {
+      display: inline-block;
+      margin-left: 10px;
+      color: #0ea5e9;
+      animation: spin 3s linear infinite;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .form-group {
+      position: relative;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-control {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(200, 200, 200, 0.10);
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  color: rgba(220,220,220,0.7);
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      width: 100%;
+    }
+
+  .form-control:focus {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: #0ea5e9;
+      box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+      outline: none;
+    }
+
+    .form-control::placeholder {
+  color: rgba(200,200,200,0.45);
+    }
+
+    .form-label {
+      position: absolute;
+      top: -8px;
+      left: 12px;
+  background: rgba(15, 23, 42, 0.7);
+  padding: 0 8px;
+  font-size: 0.85rem;
+  color: rgba(200,200,200,0.55);
+      font-weight: 500;
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 1rem;
+      background: linear-gradient(135deg, #0ea5e9, #3b82f6);
+      border: none;
+      border-radius: 12px;
+      color: white;
+      font-weight: 600;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .login-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(14, 165, 233, 0.3);
+    }
+
+    .login-btn:active {
+      transform: translateY(0);
+    }
+
+    .login-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    .login-btn:hover::before {
+      left: 100%;
+    }
+
+    /* Loading overlay */
+    #postLoginLoading {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.8);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .success-animation {
+      text-align: center;
+      color: #10b981;
+    }
+
+    .success-icon {
+      font-size: 4rem;
+      animation: successPulse 1.5s ease-in-out;
+    }
+
+    @keyframes successPulse {
+      0% { transform: scale(0); opacity: 0; }
+      50% { transform: scale(1.2); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* Alert styling */
+    .alert {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #fecaca;
+      border-radius: 8px;
+    }
+
+    .form-text {
+      color: rgba(226, 232, 240, 0.9);
+      font-size: 0.85rem;
+      text-align: center;
+      margin-top: 1rem;
+    }
+    /* Particle/background animation styles */
+    .bg-animation {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .bg-animation .particles {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: rgba(14, 165, 233, 0.4);
+      animation: particle-float 8s linear both;
+    }
+    @keyframes particle-float {
+      0% { transform: translateY(0) translateX(0); opacity: 0; }
+      10% { opacity: 1; }
+      70% { opacity: 1; }
+      100% { transform: translateY(-120vh) translateX(40px); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Animated Background -->
+  <div class="bg-animation"></div>
+  <span class="logo-3d-wrap" id="heroDroneWrap">
+    <div id="heroDrone" class="hero-drone" aria-label="Open Login"></div>
+  </span>
+
+  <!-- Loading overlay for post-login -->
+  <div id="postLoginLoading">
+    <div class="success-animation">
+      <div class="success-icon">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <div class="mt-3 text-light">
+        <h4>Login Successful!</h4>
+        <p>Preparing your FPV Control Center...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Login Form -->
+  <div class="login-container">
+    <a href="https://github.com/NapoII/FPVSessions" target="_blank" rel="noopener noreferrer">
+      <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="login-logo">
+    </a>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="mb-3">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }} py-2 mb-2">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+  <form method="post" id="loginForm">
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input type="text" name="username" class="form-control typing-input"
+               placeholder="Enter your username" autocomplete="username" autofocus>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" name="password" class="form-control typing-input"
+               placeholder="Enter your password" autocomplete="current-password">
+      </div>
+
+      <button type="submit" class="login-btn">
+        <i class="fas fa-sign-in-alt"></i>
+        Access Control Center
+      </button>
+    </form>
+  </div>
+
+  <!-- Audio elements -->
+  <audio id="beepSound" preload="auto">
+    <source src="{{ url_for('static', filename='login/pip.wav') }}" type="audio/wav">
+  </audio>
+
+  <audio id="waveSound" preload="auto">
+    <source src="{{ url_for('static', filename='login/login.wav') }}" type="audio/wav">
+  </audio>
+
+  <script>
+    // Initialize hero drone, particles, sounds and login reveal
+    document.addEventListener('DOMContentLoaded', function() {
+      function createParticles(){
+        const container = document.querySelector('.bg-animation');
+        if (!container) return;
+        for (let i = 0; i < 40; i++){
+          setTimeout(() => {
+            const p = document.createElement('div');
+            p.className = 'particles';
+            // spread horizontally and vertically so they don't stack at the top
+            p.style.left = Math.random() * 100 + 'vw';
+            // spawn between 8% and 80% of viewport height
+            p.style.top = (8 + Math.random() * 72) + 'vh';
+            // start invisible, let keyframes fade it in
+            p.style.opacity = '0';
+            p.style.animationDelay = Math.random() * 8 + 's';
+            p.style.animationDuration = (Math.random() * 3 + 8) + 's';
+            p.style.animationFillMode = 'both';
+            container.appendChild(p);
+            setTimeout(() => { try{ p.remove(); }catch(e){} }, 11000);
+          }, Math.random() * 2000);
+        }
+      }
+
+      // sound helpers
+      function playBeep(){
+        try{
+          // create a short-lived Audio so each keystroke can overlap and reliably play
+          const srcEl = document.querySelector('#beepSound source');
+          const src = srcEl ? srcEl.src : (document.getElementById('beepSound').src || '/static/login/pip.wav');
+          const a = new Audio(src);
+          a.volume = 0.28;
+          // small play attempt; browsers allow this during user-initiated events like typing
+          a.play().catch(() => {});
+        }catch(e){}
+      }
+      function playWave(){
+        try{ const w = document.getElementById('waveSound').cloneNode(); w.volume = 0.5; w.play().catch(()=>{}); }catch(e){}
+      }
+
+      // start particles periodically
+      createParticles();
+      setInterval(createParticles, 10000);
+
+      // hero drone behavior
+      const hero = document.getElementById('heroDrone');
+      if (hero){
+        // try fetching admin-managed drone images (png/webp) and pick a random one
+        fetch('/api/drones').then(r => r.json()).then(j => {
+          try{
+            const list = (j && j.drones) ? j.drones : [];
+            if (list.length){
+              const choice = list[Math.floor(Math.random()*list.length)];
+              hero.style.backgroundImage = `url('${choice}')`;
+              // if webp/smaller, keep default sizing; random class for variety
+              if (Math.random() < 0.5) hero.classList.add('small'); else hero.classList.remove('small');
+              return;
+            }
+          }catch(e){ }
+          // fallback to bundled images
+          const img1 = "{{ url_for('static', filename='login/drone.png') }}";
+          const img2 = "{{ url_for('static', filename='login/drone_2.png') }}";
+          if (Math.random() < 0.5) { hero.classList.remove('small'); hero.style.backgroundImage = `url('${img1}')`; }
+          else { hero.classList.add('small'); hero.style.backgroundImage = `url('${img2}')`; }
+        }).catch(()=>{
+          const img1 = "{{ url_for('static', filename='login/drone.png') }}";
+          const img2 = "{{ url_for('static', filename='login/drone_2.png') }}";
+          if (Math.random() < 0.5) { hero.classList.remove('small'); hero.style.backgroundImage = `url('${img1}')`; }
+          else { hero.classList.add('small'); hero.style.backgroundImage = `url('${img2}')`; }
+        });
+        // pip-on-hover with cooldown (avoid rapid retrigger) and mirror wrapper class toggles
+        const wrap = document.getElementById('heroDroneWrap');
+        let pipCooldown = 0;
+        function tryPip(){
+          const now = Date.now();
+          if (now - pipCooldown < 700) return; // 700ms cooldown
+          pipCooldown = now;
+          playBeep();
+        }
+        hero.addEventListener('pointerenter', tryPip);
+        hero.addEventListener('pointerdown', (ev) => { try{ tryPip(); }catch(e){} });
+        hero.addEventListener('click', () => {
+          try{ tryPip(); if (wrap) wrap.classList.add('down'); }catch(e){}
+          setTimeout(() => { const lc = document.querySelector('.login-container'); if (lc) lc.classList.add('open'); }, 150);
+        });
+      }
+
+      // typing-triggered pip removed per request: no sound when typing
+
+      // login form submit: show post-login animation + submit
+      const form = document.getElementById('loginForm');
+      if (form){
+        form.addEventListener('submit', function(e){
+          e.preventDefault();
+          try{ if (wrap) wrap.classList.add('lift-off'); }catch(e){}
+          const overlay = document.getElementById('postLoginLoading');
+          if (overlay) overlay.style.display = 'flex';
+          setTimeout(() => { playWave(); }, 150);
+          setTimeout(() => { form.submit(); }, 600);
+        });
+      }
+    });
+
+    // Small logout helper (console friendly)
+    (function(){
+      function doLogout(){ try{ fetch('/logout', {method:'GET', credentials:'same-origin'}).finally(()=>window.location.href='/login'); }catch(e){ window.location.href = '/login'; } }
+      window.logoutConsole = doLogout; window['/logout'] = doLogout; window.consoleCommand = function(cmd){ if (String(cmd) === '/logout'){ doLogout(); return true; } return false; };
+    })();
+  </script>
+
+  <div class="site-footer">
+  <div class="left" style="color: rgba(200,200,200,0.48);">Created by <strong style="font-weight:600;color:rgba(210,210,210,0.7)">NapoII</strong> — <a href="https://github.com/NapoII/FPVSessions" target="_blank" rel="noopener noreferrer" style="color: rgba(200,200,200,0.5)">FPVSessions</a></div>
+  <div class="right" style="color: rgba(200,200,200,0.38)">© 2025 NapoII. All rights reserved.</div>
+  </div>
+</body>
+</html>

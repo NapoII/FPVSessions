@@ -1,0 +1,18 @@
+[Unit]
+Description=Gunicorn instance to serve my_fpv
+After=network.target
+
+[Service]
+User=my_fpvuser
+Group=www-data
+WorkingDirectory=/home/my_fpvuser/my_fpv
+Environment="PATH=/home/my_fpvuser/my_fpv/venv/bin"
+ExecStart=/home/my_fpvuser/my_fpv/venv/bin/gunicorn --workers 3 --bind 127.0.0.1:8007 wsgi:app
+
+# These three lines make the print outputs visible:
+StandardOutput=journal
+StandardError=journal
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

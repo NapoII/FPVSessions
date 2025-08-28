@@ -1,0 +1,8 @@
+Flask>=3.0
+Werkzeug>=3.0
+Jinja2>=3.1
+itsdangerous>=2.1
+click>=8.1
+# Gunicorn is for Linux deployment; on Windows use waitress for local run if needed
+gunicorn>=21.2
+waitress>=2.1

@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin Settings - FPVSessions</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+  body{ background: linear-gradient(135deg,#0f172a,#102033); color:#e6eef8; font-family:Segoe UI, Tahoma, Geneva, Verdana, sans-serif; }
+  .container{ max-width:900px; margin:40px auto; }
+  /* Top-right logout button (match main page) */
+  .top-logout {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    z-index: 12000;
+  }
+  .top-logout .btn {
+    background: rgba(255,255,255,0.04);
+    color: #e2e8f0;
+    border: 1px solid rgba(255,255,255,0.06);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    box-shadow: 0 6px 18px rgba(2,6,23,0.45);
+  }
+  .card{ background: rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.04); }
+  /* improve readability for small/filename text inside cards/tables */
+  .card .small, .card .text-truncate { color: #e6eef8; }
+  .table.table-dark td, .table.table-dark th { color: #e6eef8; }
+
+  /* Unified button styles (copied/adapted from main template) */
+  .btn-unified {
+    background: rgba(255,255,255,0.04);
+    color: #e2e8f0;
+    border: 1px solid rgba(255,255,255,0.06);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    box-shadow: 0 6px 18px rgba(2,6,23,0.45);
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .btn-unified:hover { transform: translateY(-2px); }
+  .btn-unified.btn-sm { padding: .25rem .5rem; font-size: .85rem; }
+  /* softer, more desaturated pastel palette (admin fallback) */
+  .btn-pastel-primary { background: linear-gradient(135deg,#77d9ff,#33b8ff); color: #012834; border-color: rgba(0,110,170,0.18); }
+  .btn-pastel-info { background: linear-gradient(135deg,#9fefff,#66ddff); color: #012834; border-color: rgba(0,105,160,0.18); }
+  .btn-pastel-warn { background: linear-gradient(135deg,#ffd58a,#ffb84d); color: #4a3410; border-color: rgba(255,145,0,0.18); }
+  .btn-pastel-danger { background: linear-gradient(135deg,#ff9bb0,#ff4f76); color: #4a0f19; border-color: rgba(220,38,38,0.18); }
+
+  </style>
+  <style>
+  /* Icon backlight effect for buttons */
+  .icon-backlight { display:inline-block; transition: filter .12s ease, transform .12s ease; }
+  .btn-pastel-primary:hover .icon-backlight { filter: drop-shadow(0 0 10px rgba(51,184,255,0.45)); transform: translateY(-1px) scale(1.02); }
+  .btn-pastel-info:hover .icon-backlight { filter: drop-shadow(0 0 10px rgba(102,220,255,0.35)); transform: translateY(-1px) scale(1.02); }
+  .btn-pastel-warn:hover .icon-backlight { filter: drop-shadow(0 0 10px rgba(255,185,80,0.45)); transform: translateY(-1px) scale(1.02); }
+  .btn-pastel-danger:hover .icon-backlight { filter: drop-shadow(0 0 12px rgba(255,90,110,0.45)); transform: translateY(-1px) scale(1.02); }
+  /* Icon-only button style to match main page small icon buttons */
+  .icon-only-btn {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:40px;
+    height:40px;
+    padding:0.35rem;
+    border-radius:10px;
+    background: rgba(255,255,255,0.04);
+    color: #e2e8f0;
+    border: 1px solid rgba(255,255,255,0.06);
+    box-shadow: 0 6px 18px rgba(2,6,23,0.45);
+    transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+  }
+  .icon-only-btn i { font-size: 1.6rem; color: #ffffff !important; text-shadow: 0 0 4px rgba(255,255,255,0.8); }
+  /* slightly larger icon buttons for clearer recognition */
+  .icon-only-btn { width:48px; height:48px; border-radius:12px; background: rgba(255,255,255,0.08) !important; }
+  /* match top-right logout/settings icon button style for consistency */
+  .top-icon-btn {
+    /* match the main page top-right logout/settings button appearance */
+    background: rgba(255,255,255,0.04);
+    color: #e2e8f0;
+    border: 1px solid rgba(255,255,255,0.06);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    box-shadow: 0 6px 18px rgba(2,6,23,0.45);
+    padding: 0.35rem;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:44px; height:44px; border-radius:12px;
+  }
+  .top-icon-btn i { font-size:1.4rem; color: #ffffff !important; text-shadow: 0 0 4px rgba(255,255,255,0.8); }
+  /* disable hover transform for icon buttons - keep only tooltip on hover */
+  .icon-only-btn:hover { transform: none !important; filter: none !important; box-shadow: none !important; }
+  .top-icon-btn:hover { transform: none !important; filter: none !important; box-shadow: none !important; }
+  /* Force small buttons and their icons to always be white */
+  .btn.btn-sm { color: #ffffff !important; }
+  .btn.btn-sm i, .top-icon-btn i, .icon-backlight { color: #ffffff !important; }
+  </style>
+  <style>
+  /* Force high-contrast cream text for the config/info area */
+  .card { color: #fff8ec !important; }
+  .card h5, .card p, .card strong, .card code { color: #fff8ec !important; }
+  .container h2 { color: #fff8ec !important; }
+  .container .text-muted { color: #fff8ec !important; }
+  </style>
+  <style>
+  /* Make the input controls match the main site's search input (rounded glass look) */
+  .input-group.search-like {
+    border-radius: 16px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    box-shadow: 0 8px 24px rgba(2,6,23,0.25);
+  }
+  .input-group.search-like .form-control {
+    border: none;
+    background: transparent;
+    color: inherit;
+    box-shadow: none;
+  }
+  .input-group.search-like .input-group-text,
+  .input-group.search-like .btn {
+    border: none;
+    background: transparent;
+    box-shadow: none;
+  }
+  </style>
+  <style>
+  /* Constrain the Rebuild Sessions button so it's not overly wide */
+  .rebuild-btn {
+    display: inline-flex !important;
+    align-items: center;
+    gap: .4rem;
+    padding: .18rem .45rem !important;
+    max-width: 260px; /* prevents taking full width */
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .rebuild-btn .btn-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
+    max-width: 160px; /* keep label compact */
+  }
+  </style>
+</head>
+<body>
+  <!-- Top-right logout/settings buttons (same classes as main page) -->
+  <div class="top-logout" style="z-index: 12000;">
+    <a href="/" class="btn btn-sm me-1" data-bs-toggle="tooltip" data-bs-original-title="Back to main">
+      <i class="fa-solid fa-house icon-backlight" aria-hidden="true"></i>
+      <span class="visually-hidden">Back</span>
+    </a>
+    <a href="{{ url_for('admin_settings') }}" class="btn btn-sm me-1" title="Admin Settings">
+      <i class="fa-solid fa-gear"></i>
+    </a>
+    <button id="logoutTopBtn" class="btn btn-sm" title="Logout">
+      <i class="fa-solid fa-right-from-bracket"></i>
+    </button>
+  </div>
+  <div class="container">
+    <h2>Admin Settings</h2>
+    <p class="text-muted">Only the configured admin user can access this page.</p>
+
+    <!-- Rebuild Sessions (top standalone panel) -->
+    <div class="card p-3 mb-3 text-center">
+      <h5>Rebuild Sessions</h5>
+    <p class="text-muted">Use this button to rebuild the sessions index if sessions are missing or outdated. This operation scans the configured Sessions Folder (FPV_BASE) and rebuilds the internal index.</p>
+  <button id="rebuildSessionsBtn" class="btn btn-pastel-warn btn-unified btn-sm rebuild-btn mx-auto d-inline-flex" style="font-size: .9rem; min-width: 0;">
+        <i class="fa-solid fa-folder-tree icon-backlight" aria-hidden="true" style="font-size:1rem;"></i>
+        <span class="btn-label">Rebuild Sessions</span>
+        <i class="fa-solid fa-arrows-rotate ms-1" aria-hidden="true" style="font-size:0.95rem; opacity:0.9"></i>
+      </button>
+      <p class="mt-2">Configured admin: <strong>{{ config.get('FPVWEB_USER','admin') }}</strong></p>
+    </div>
+    <script>
+      (function(){
+        const btn = document.getElementById('rebuildSessionsBtn');
+        if (!btn) return;
+        btn.addEventListener('click', async function(){
+          btn.disabled = true;
+          const orig = btn.querySelector('.btn-label').textContent;
+          btn.querySelector('.btn-label').textContent = 'Rebuilding...';
+          try {
+            const res = await fetch('/api/admin/rebuild-sessions', { method: 'POST' });
+            if (res.ok) {
+              alert('Sessions index rebuilt successfully!');
+            } else {
+              const t = await res.json().catch(()=>({}));
+              alert('Failed to rebuild sessions index: ' + (t.error || res.statusText));
+            }
+          } catch (e) {
+            alert('Error occurred while rebuilding sessions index.');
+          } finally {
+            btn.disabled = false;
+            btn.querySelector('.btn-label').textContent = orig;
+          }
+        });
+      })();
+    </script>
+
+    <!-- Application Sessions Folder (FPV_BASE) Section -->
+    <div class="card p-3 mb-3 text-center">
+      <h5>Application</h5>
+      <form id="sessionsFolderForm" class="row g-2 align-items-end justify-content-center mb-2">
+        <div class="col-md-8">
+          <label class="form-label">Sessions Folder (FPV_BASE)</label>
+          <div class="input-group search-like">
+            <span class="input-group-text bg-dark text-white border-secondary"><i class="fa-solid fa-folder"></i></span>
+            <input id="sessionsFolderInput" name="sessions_folder" class="form-control bg-dark text-white border-secondary" value="{{ FPV_BASE }}" required>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <button type="submit" class="btn btn-pastel-primary btn-unified" id="saveSessionsFolderBtn">
+            <i class="fa-solid fa-floppy-disk icon-backlight"></i> Save
+          </button>
+        </div>
+      </form>
+      <div id="sessionsFolderMsg" class="small"></div>
+      <p>Configured admin: <strong>{{ config.get('FPVWEB_USER', 'admin') }}</strong></p>
+    </div>
+  <script>
+    document.getElementById('sessionsFolderForm').addEventListener('submit', async function(e){
+      e.preventDefault();
+      const input = document.getElementById('sessionsFolderInput');
+      const msg = document.getElementById('sessionsFolderMsg');
+      const val = input.value.trim();
+      if (!val) return;
+      msg.textContent = 'Saving...';
+      const res = await fetch('/api/admin/sessions-folder', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({sessions_folder: val})
+      });
+      if (res.ok) {
+        msg.textContent = 'Saved! Session list reloaded.';
+        setTimeout(()=>{ location.reload(); }, 800);
+      } else {
+        const t = await res.json().catch(()=>({}));
+        msg.textContent = 'Error: ' + (t.error||'unknown');
+      }
+    });
+  </script>
+
+      <div class="card p-3 mb-3 text-center">
+      <h5>Share Links</h5>
+      <p>Active share links can be reviewed via the API endpoint <code>/api/share-links</code>.</p>
+    </div>
+
+    <div class="card p-3 mb-3">
+      <h5>Users</h5>
+      <form id="createUserForm" class="row g-2 align-items-end mb-3">
+        <div class="col-sm-4">
+          <label class="form-label">Username</label>
+          <div class="input-group search-like">
+            <span class="input-group-text bg-dark text-white border-secondary"><i class="fa-solid fa-user"></i></span>
+            <input id="newUsername" class="form-control bg-dark text-white border-secondary" required>
+          </div>
+        </div>
+        <div class="col-sm-4">
+          <label class="form-label">Password</label>
+          <div class="input-group search-like">
+            <span class="input-group-text bg-dark text-white border-secondary"><i class="fa-solid fa-key"></i></span>
+            <input id="newPassword" type="password" class="form-control bg-dark text-white border-secondary" required>
+          </div>
+        </div>
+        <div class="col-sm-4">
+          <button class="btn btn-sm" id="createUserBtn" data-bs-toggle="tooltip" title="Create user">
+            <i class="fa-solid fa-user-plus icon-backlight" aria-hidden="true"></i>
+            <span class="visually-hidden">Create user</span>
+          </button>
+        </div>
+      </form>
+
+      <div id="usersArea">
+        <table class="table table-dark table-striped table-sm align-middle">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th class="text-center">Login Count</th>
+              <th class="text-center">Passwort</th>
+              <th class="text-center">Can share</th>
+              <th class="text-center">Can edit tags</th>
+              <th class="text-center">Can create sessions</th>
+              <th class="text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="usersTbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card p-3 mb-3">
+      <h5>Drone Images</h5>
+      <div class="row mb-2">
+        <div class="col-sm-8">
+          <div class="input-group search-like">
+            <span class="input-group-text bg-dark text-white border-secondary"><i class="fa-solid fa-image"></i></span>
+            <input id="droneFile" type="file" accept=".png,.webp" class="form-control bg-dark text-white border-secondary">
+          </div>
+        </div>
+        <div class="col-sm-4">
+          <button id="uploadDroneBtn" class="btn btn-sm" data-bs-toggle="tooltip" title="Upload drone image">
+            <i class="fa-solid fa-cloud-arrow-up icon-backlight" aria-hidden="true"></i>
+            <span class="visually-hidden">Upload drone image</span>
+          </button>
+        </div>
+      </div>
+      <div id="droneList" class="d-flex flex-wrap gap-2">
+        <!-- thumbnails inserted here -->
+      </div>
+    </div>
+
+    <div class="card p-3 mb-3">
+      <h5>Active Users</h5>
+      <div id="activeUsersArea">
+        <table class="table table-dark table-sm">
+          <thead><tr><th>User</th><th class="text-center">Action</th></tr></thead>
+          <tbody id="activeUsersTbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+  </div>
+
+  <!-- config data for scripts -->
+  <div id="admin-config" data-configured-admin="{{ config.get('FPVWEB_USER','admin') }}" style="display:none" aria-hidden="true"></div>
+
+  <script>
+    async function loadUsers(){
+      const res = await fetch('/api/admin/users');
+      if (!res.ok) return;
+      const j = await res.json();
+      const tbody = document.getElementById('usersTbody'); tbody.innerHTML = '';
+      (j.users||[]).forEach(u => {
+        const tr = document.createElement('tr');
+        const cfgEl = document.getElementById('admin-config');
+        const configuredAdmin = cfgEl ? cfgEl.getAttribute('data-configured-admin') : null;
+        // columns: user | login count | pw (change) | can share (checkbox) | actions (delete)
+        const userCol = `<td>${u.username}</td>`;
+        const countCol = `<td class="text-center">${u.login_count||0}</td>`;
+  const pwCol = `<td class="text-center"><button class="btn btn-sm" onclick="changePasswordPrompt('${u.username}')" data-bs-toggle="tooltip" title="Change password"><i class="fa-solid fa-gear icon-backlight" aria-hidden="true"></i><span class="visually-hidden">Change password</span></button></td>`;
+        // permission checkboxes (disabled for configured admin)
+        const shareChecked = (u.permissions && u.permissions.share) ? 'checked' : '';
+        const editChecked = (u.permissions && u.permissions.edit_tags) ? 'checked' : '';
+        const createChecked = (u.permissions && u.permissions.create_sessions) ? 'checked' : '';
+        const shareInput = (u.username === configuredAdmin) ? '<em>n/a</em>' : `
+          <input type="checkbox" onchange="togglePermission('${u.username}','share', this.checked)" ${shareChecked} aria-label="Can share">
+        `;
+        const editInput = (u.username === configuredAdmin) ? '<em>n/a</em>' : `
+          <input type="checkbox" onchange="togglePermission('${u.username}','edit_tags', this.checked)" ${editChecked} aria-label="Can edit tags">
+        `;
+        const createInput = (u.username === configuredAdmin) ? '<em>n/a</em>' : `
+          <input type="checkbox" onchange="togglePermission('${u.username}','create_sessions', this.checked)" ${createChecked} aria-label="Can create sessions">
+        `;
+        const shareCol = `<td class="text-center">${shareInput}</td>`;
+        const editCol = `<td class="text-center">${editInput}</td>`;
+        const createCol = `<td class="text-center">${createInput}</td>`;
+          let actionsCol = '';
+        if (u.username === configuredAdmin){
+          // configured admin: show label in actions, no delete
+          actionsCol = `<td class="text-center"><em>configured admin</em></td>`;
+        } else {
+            actionsCol = `<td class="text-center">`+
+                         `<button class="btn btn-sm" onclick="deleteUser('${u.username}')" data-bs-toggle="tooltip" title="Delete user"><i class="fa-solid fa-trash-can icon-backlight" aria-hidden="true"></i><span class="visually-only">Delete user</span></button>`+
+                         `</td>`;
+        }
+  tr.innerHTML = userCol + countCol + pwCol + shareCol + editCol + createCol + actionsCol;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function deleteUser(u){
+      if (!confirm('Delete user '+u+' ?')) return;
+      const res = await fetch('/api/admin/users/'+encodeURIComponent(u), {method:'DELETE', headers:{'Content-Type':'application/json'}});
+      if (res.ok) { await loadUsers(); } else { alert('Failed to delete user'); }
+    }
+
+    function changePasswordPrompt(u){
+      const pw = prompt('New password for '+u+' (leave empty to cancel)');
+      if (!pw) return;
+      fetch('/api/admin/users/'+encodeURIComponent(u)+'/password', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({password: pw})})
+        .then(r=>{ if (r.ok) alert('Password updated'); else r.text().then(t=>alert('Error: '+t)); });
+    }
+
+    document.getElementById('createUserForm').addEventListener('submit', async function(e){
+      e.preventDefault();
+      const u = document.getElementById('newUsername').value.trim();
+      const p = document.getElementById('newPassword').value;
+      if (!u || !p) return alert('username and password required');
+      const res = await fetch('/api/admin/users', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({username: u, password: p})});
+      if (res.ok){ document.getElementById('newUsername').value=''; document.getElementById('newPassword').value=''; await loadUsers(); }
+      else { const t = await res.json().catch(()=>({})); alert('Error: '+(t.error||'unknown')); }
+    });
+
+    // initial load
+    loadUsers();
+    // Drone management
+    async function loadDrones(){
+      const res = await fetch('/api/admin/drones');
+      if (!res.ok) return;
+      const j = await res.json();
+      const list = document.getElementById('droneList'); list.innerHTML = '';
+      const drones = j.drones || [];
+      drones.forEach(fn => {
+        const wrap = document.createElement('div');
+        wrap.className = 'card p-2 text-center';
+        wrap.style.width = '140px';
+        wrap.innerHTML = `<div style="height:90px; background-image:url('${encodeURI('/static/login/drones/'+fn)}'); background-size:contain; background-position:center; background-repeat:no-repeat"></div>`+
+          `<div class="mt-2 small text-truncate">${fn}</div>`+
+            `<div class="mt-2"><button class="btn btn-sm" data-fn="${fn}" data-bs-toggle="tooltip" title="Delete drone"><i class="fa-solid fa-trash-can icon-backlight" aria-hidden="true"></i><span class="visually-hidden">Delete</span></button></div>`;
+        list.appendChild(wrap);
+      });
+      // collect delete buttons and wire handlers
+      const deletes = Array.from(list.querySelectorAll('button[data-fn]'));
+      // disable delete if only 1 left
+      if (deletes.length <= 1){ deletes.forEach(b => b.disabled = true); }
+      deletes.forEach(b => b.addEventListener('click', async function(){
+        const fn = this.getAttribute('data-fn');
+        if (!confirm('Delete '+fn+' ?')) return;
+        const res = await fetch('/api/admin/drones/'+encodeURIComponent(fn), {method:'DELETE'});
+        if (res.ok) await loadDrones(); else { const t = await res.json().catch(()=>({})); alert('Error: '+(t.error||'failed')); }
+      }));
+    }
+
+    document.getElementById('uploadDroneBtn').addEventListener('click', async function(){
+      const f = document.getElementById('droneFile').files[0];
+      if (!f) return alert('Pick a png or webp file');
+      const fd = new FormData(); fd.append('file', f);
+      const res = await fetch('/api/admin/drones', {method:'POST', body: fd});
+      if (res.ok){ document.getElementById('droneFile').value=''; await loadDrones(); } else { const t = await res.json().catch(()=>({})); alert('Error: '+(t.error||'upload failed')); }
+    });
+
+    loadDrones();
+    // Active users
+    async function loadActiveUsers(){
+      const res = await fetch('/api/admin/active-users');
+      if (!res.ok) return;
+      const j = await res.json();
+      const tbody = document.getElementById('activeUsersTbody'); tbody.innerHTML = '';
+      (j.active||[]).forEach(u => {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td>${u}</td><td class="text-center"><button class="btn btn-sm" onclick="revokeUser('${u}')" data-bs-toggle="tooltip" title="Revoke session"><i class="fa-solid fa-right-from-bracket icon-backlight" aria-hidden="true"></i><span class="visually-hidden">Revoke</span></button></td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function revokeUser(u){
+      if (!confirm('Force logout '+u+' ?')) return;
+      const res = await fetch('/api/admin/revoke-user', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({username: u})});
+      if (res.ok) loadActiveUsers(); else { alert('Failed'); }
+    }
+
+    loadActiveUsers();
+
+    // Toggle arbitrary permission for a user (merges with existing permissions)
+    async function togglePermission(username, key, enabled){
+      try{
+        // fetch current user list to get existing permissions for merge
+        const r = await fetch('/api/admin/users');
+        if (!r.ok) throw new Error('failed to fetch users');
+        const data = await r.json();
+        const found = (data.users||[]).find(x => x.username === username) || {};
+        const existing = (found.permissions) ? Object.assign({}, found.permissions) : {};
+        existing[key] = !!enabled;
+        const res = await fetch('/api/admin/users/'+encodeURIComponent(username)+'/permissions', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({permissions: existing})
+        });
+        if (!res.ok){
+          const t = await res.json().catch(()=>({}));
+          alert('Failed to update permissions: '+(t.error||res.statusText));
+          await loadUsers();
+        }
+      }catch(e){
+        alert('Error updating permissions');
+        await loadUsers();
+      }
+    }
+
+  // rebuildSessionsBtn handler moved to top panel's script (single handler only)
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // initialize tooltips for static and dynamically created elements
+    document.addEventListener('DOMContentLoaded', function(){
+      var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+      tooltipTriggerList.map(function (el) { return new bootstrap.Tooltip(el); });
+    });
+  </script>
+  <script>
+    // Top logout button handler
+    (function(){
+      var btn = document.getElementById('logoutTopBtn');
+      if (btn){ btn.addEventListener('click', function(){ fetch('/logout', {method:'GET', credentials:'same-origin'}).finally(()=>window.location.href='/login'); }); }
+      // console-friendly helper
+      window.doLogout = function(){ fetch('/logout', {method:'GET', credentials:'same-origin'}).finally(()=>window.location.href='/login'); };
+    })();
+  </script>
+</body>
+</html>
